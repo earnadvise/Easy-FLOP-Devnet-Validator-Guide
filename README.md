@@ -1,89 +1,95 @@
-Flop Network Devnet Validator Setup Guide
-<img width="986" height="492" alt="banner" src="https://github.com/user-attachments/assets/8e0d24dc-3791-47e3-b381-7762ebe70c5e" />
+FLOP Network Devnet Validator Setup Guide
+<img width="986" height="492" alt="banner" src="https://github.com/user-attachments/assets/88f36241-d87c-4ef6-88af-3a3b855f64f9" />
 
-
-A simple, practical guide to setting up a FLOP Network devnet validator on your home PC using WSL2 (Ubuntu) on Windows.
+A complete, beginner-friendly walkthrough for setting up a FLOP Network devnet validator on Windows using WSL2 (Ubuntu).
 
 Preview unavailable
 
-Important Notes Before You Start
-The devnet is currently disposable. Flop Labs has made it clear that running on devnet does not earn token rewards or airdrop points.
-Run this if you want to test the setup early and be ready for the public testnet.
-You do not need to keep your PC running 24/7. The initial setup only takes about 20 to 30 minutes to generate your keys and identity.
-Never share your 12-word recovery phrase, account.json, or .env file with anyone. Only share your public SS58 address and SSH public key.
-Requirements
-A Windows 10 or 11 PC (with WSL2 enabled) or any standard Ubuntu 22.04 / 24.04 Linux machine.
-Around 50 GB free disk space and 8 GB RAM for the preparation phase.
-Total cost: $0.
-Step 1: Set Up WSL2 on Windows
+Overview
 
-If you don't have Ubuntu on Windows yet:
+Flop Labs has launched the FLOP Devnet for testing consensus and data availability infrastructure.
 
-Open PowerShell as Administrator.
-Run:
+Notice: The FLOP Devnet is an experimental test environment and currently does not award tokens or airdrop allocations. Use this guide to learn the setup process and prepare your validator keys for the upcoming public testnet.
+
+Setup Requirements
+Component	Requirement	Cost
+Operating System	Windows 10/11 (with WSL2 Ubuntu) or Ubuntu Linux	Free
+Hardware	8 GB+ RAM, 50 GB free disk space	Free
+Validator Uptime	20–30 minutes for identity & key generation	No 24/7 required
+Devnet Tokens	Provided via official faucet and operations funding	Free
+Step 1: Install Ubuntu via WSL2
+
+If you do not have WSL2 installed on Windows:
+
+Open PowerShell as Administrator (Right-click PowerShell -> Run as administrator).
+Run the installation command:
 powershell
 wsl --install -d Ubuntu-22.04
-Restart your PC if prompted, then open Ubuntu from your Start menu and set a username and password.
-Step 2: Install Required Dependencies
+Restart your computer if prompted by Windows.
+Launch Ubuntu 22.04 from the Start menu and set a username and password.
+Step 2: Install Base Dependencies
 
-Inside your Ubuntu terminal, run the following commands to install Docker, Node.js 24, and pnpm:
+Open your Ubuntu terminal and run the commands below to install Docker, Node.js 24, and pnpm:
 
 bash
-# Update packages and install essentials
+# Update package repositories and install build tools
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y curl wget git jq build-essential ca-certificates gnupg lsb-release age
-# Install Docker
+# Install Docker engine
 sudo apt install -y docker.io docker-compose-v2
 sudo usermod -aG docker $USER
 sudo service docker start
 # Install Node.js 24
 curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt-get install -y nodejs
-# Enable pnpm
+# Enable pnpm package manager
 sudo corepack enable
 sudo corepack prepare pnpm@12.14.0 --activate
 
-You can confirm everything is installed with:
+Verify your environment versions:
 
 bash
-node -v
-pnpm -v
-docker -v
-Step 3: Download the Validator Package
+node -v      # v24.x
+pnpm -v      # 12.14.0
+docker -v    # Docker version 24+
+Step 3: Download & Extract Validator Package
+
+Download the official devnet release package (validator-cs-be91fe83):
+
 bash
 mkdir -p ~/flop && cd ~/flop
-# Download the latest package and sha256 checksum
+# Download package and checksum
 wget https://explorer.devnet.flop.network/validator-downloads/validator-cs-be91fe83-0.3.0-devnet.1.tar.gz
 wget https://explorer.devnet.flop.network/validator-downloads/validator-cs-be91fe83-0.3.0-devnet.1.tar.gz.sha256
-# Verify the file
+# Verify package integrity
 sha256sum -c validator-cs-be91fe83-0.3.0-devnet.1.tar.gz.sha256
-# Extract
+# Extract files
 tar -xzf validator-cs-be91fe83-0.3.0-devnet.1.tar.gz
 cd validator-cs-be91fe83
-Step 4: Configure Host and Run Prepare
+Step 4: Configure Host & Generate Keys
 
-Set your hostname and avoid WSL local host errors:
+Set your hostname and configure /etc/hosts:
 
 bash
 sudo hostnamectl set-hostname myvalidator
 echo "127.0.0.1 $(hostname)" | sudo tee -a /etc/hosts
 
-Generate an SSH host key (operations uses this to encrypt your Tailscale network access):
+Generate the host SSH key (required for encrypted Tailscale network onboarding):
 
 bash
 sudo ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N ""
 
-Install package dependencies and run the onboard prepare script:
+Install project dependencies and execute onboarding:
 
 bash
 pnpm install --frozen-lockfile --ignore-scripts
 pnpm onboard prepare
 
-When finished, this command creates your private identity files (account.json and .env) and prints your public SS58 address on screen.
+The script will generate your local private configuration (account.json and .env) and print your Public SS58 Address.
 
-Step 5: Get Your Public Values for Operations
+Step 5: Format & Share Public Onboarding Values
 
-To view the exact details you need to send to the FLOP team:
+Run the script below to collect the three public values needed by operations:
 
 bash
 mkdir -p ~/flop
@@ -97,33 +103,40 @@ PUBLIC_NOTE=~/flop/ops-public-values.txt
   echo "Host SSH fingerprint:"
   ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub 2>/dev/null || true
 } | tee "$PUBLIC_NOTE"
+Submission Template
 
-Submit these three public items to the FLOP team coordinator or leave a comment on GitHub issue flop-labs/network#10:
+Send only these three public values to your FLOP operations contact or comment on flop-labs/network#10
+:
 
-Hostname
-Public SS58 Address
-Host SSH Public Key
+text
+Hi FLOP Operations Team,
+I have completed the local validator preparation (`pnpm onboard prepare`) using package `validator-cs-be91fe83 · 0.3.0-devnet.1` and would like to request enrollment into the devnet validator set.
+Here are my public onboarding values:
+- Hostname: myvalidator
+- Public SS58 Address: <YOUR_PUBLIC_SS58_ADDRESS>
+- Host SSH Public Key: <YOUR_SSH_PUBLIC_KEY>
+Looking forward to receiving the Tailscale enrollment key, stake funding, and da-peers.json to execute `pnpm onboard join`. Thank you!
 
-Note: Never send account.json, .env, or your seed phrase. Only send the public values listed above.
+Security Reminder: Never share your private key, seed phrase, account.json, or .env file publicly. Only provide the public values listed above.
 
-Step 6: Next Steps (Joining the Network)
+Step 6: Wait for Operations Approval & Join
 
-At this point, you can shut down your PC. You do not need to keep the node running right now.
+At this point, you can safely close your terminal and turn off your PC. You do not need to keep the node running.
 
-The FLOP devnet validator onboarding is currently administrator-assisted. Once operations approves your details, they will provide:
+Devnet validator onboarding is administrator-assisted. Once operations approves your submission, they will supply:
 
-A Tailscale network enrollment key.
+Encrypted Tailscale network credentials.
 Devnet stake funding to your SS58 address.
-The da-peers.json file.
+The da-peers.json configuration file.
 
-After receiving those, place da-peers.json in ~/flop/validator-cs-be91fe83 and run:
+Once received, place da-peers.json into ~/flop/validator-cs-be91fe83 and run:
 
 bash
 cd ~/flop/validator-cs-be91fe83
 pnpm onboard join
 pnpm onboard verify
-Useful Links
-Official Docs: https://docs.flop.network
+Official Resources
+Operator Documentation: https://docs.flop.network/operators
 Devnet Explorer: https://explorer.devnet.flop.network
-Faucet: https://faucet.flop.network
-FLOP Network GitHub: https://github.com/flop-labs/network
+Devnet Faucet: https://faucet.flop.network
+GitHub Network Repository: https://github.com/flop-labs/network
