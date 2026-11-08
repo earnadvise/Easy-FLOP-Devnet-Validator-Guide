@@ -1,4 +1,6 @@
 Flop Network Devnet Validator Setup Guide
+<img width="986" height="492" alt="banner" src="https://github.com/user-attachments/assets/8e0d24dc-3791-47e3-b381-7762ebe70c5e" />
+
 
 A simple, practical guide to setting up a FLOP Network devnet validator on your home PC using WSL2 (Ubuntu) on Windows.
 
